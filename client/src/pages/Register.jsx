@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import "../styles/Auth.css";
 
 const Register = () => {
@@ -28,22 +29,59 @@ const Register = () => {
 
     return (
         <div className="auth-page">
-            <div className="auth-container">
-                <h2>Start Chatting</h2>
-                {error && <div className="auth-error">{error}</div>}
+            <div className="mesh-bg"></div>
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="auth-container"
+            >
+                <div className="auth-logo">
+                    ✨
+                </div>
+                <h2>Create Account</h2>
+                <p className="auth-subtitle">Create an account to start chatting.</p>
+
+                {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="auth-error">{error}</motion.div>}
+
                 <form onSubmit={handleSubmit}>
-                    <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-                    <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <div className="form-group">
+                        <label htmlFor="username">Username</label>
+                        <input
+                            id="username"
+                            type="text"
+                            placeholder="Choose a unique username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
                     <button type="submit" disabled={isLoading}>
-                        {isLoading ? "Registering..." : "Sign Up"}
+                        {isLoading ? "Creating Account..." : "Sign Up"}
                     </button>
                 </form>
-                <p>
-                    Already have an account? <Link to="/login">Log In</Link>
-                </p>
-            </div>
+
+                <div className="auth-footer">
+                    <span>Already have an account?</span>
+                    <Link to="/login">Log In</Link>
+                </div>
+            </motion.div>
         </div>
     );
 };
+
 
 export default Register;

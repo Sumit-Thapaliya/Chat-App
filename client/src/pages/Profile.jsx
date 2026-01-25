@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import "../styles/Profile.css";
 
 const Profile = () => {
@@ -25,18 +26,37 @@ const Profile = () => {
 
     return (
         <div className="profile-page">
-            <div className="profile-container">
-                <h2>Account Settings</h2>
-                <div className="profile-info">
-                    <p><strong>Username</strong> <span>{user?.username}</span></p>
-                    <p><strong>User ID</strong> <span>{user?.id}</span></p>
+            <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="profile-container"
+            >
+                <div className="profile-header">
+                    <div className="profile-avatar">
+                        {user?.username?.[0].toUpperCase()}
+                    </div>
+                    <h1>{user?.username}</h1>
+                    <p className="user-id">ID: {user?.id}</p>
                 </div>
+
+                <div className="profile-card">
+                    <div className="info-row">
+                        <span className="label">Account Status</span>
+                        <span className="value active">Verified</span>
+                    </div>
+                    <div className="info-row">
+                        <span className="label">Joined</span>
+                        <span className="value">Jan 2024</span>
+                    </div>
+                </div>
+
                 <div className="profile-actions">
                     <Link to="/" className="back-btn">Back to Chat</Link>
                     <button onClick={logout} className="logout-btn">Log Out</button>
                     <button onClick={handleDelete} className="delete-btn">Delete Account</button>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };
