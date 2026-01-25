@@ -27,6 +27,8 @@ const io = new Server(server, {
     },
 });
 
+app.set("socketio", io);
+
 const onlineUsers = new Map(); // userId -> socketId
 
 io.on("connection", (socket) => {

@@ -20,6 +20,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    friendRequests: [
+        {
+            from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+            status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" }
+        }
+    ]
 });
 
 module.exports = mongoose.model("User", UserSchema);

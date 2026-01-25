@@ -18,10 +18,22 @@ router.get("/:friendId", auth, async (req, res) => {
     }
 });
 
-// Save Message (Optional if using socket exclusively, but good for persistence via API if needed, 
-// OR we can save in socket handler. 
-// Requirement says "Save chat history". Socket.IO handles real-time. 
-// The server.js socket handler should save messages. 
-// This route is primarily for fetching history.)
+// Delete Message
+router.delete("/:id", auth, async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.id);
+        if (!message) return res.status(404).json({ msg: "Message not found" });
+
+        // Check ownership
+        if (message.sender.toString() !== req.user.id) {
+            return res.status(401).json({ msg: "Not authorized" });
+        }
+
+        await Message.findByIdAndDelete(req.params.id);
+        res.json({ msg: "Message deleted" });
+    } catch (err) {
+        res.status(500).send("Server Error");
+    }
+});
 
 module.exports = router;
