@@ -27,6 +27,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`[DEBUG] Incoming Request: ${req.method} ${req.url}`);
+    next();
+});
+
 console.log(`[CONFIG] Allowed Client URL: ${clientUrl}`);
 
 const io = new Server(server, {
@@ -43,6 +49,12 @@ app.set("socketio", io);
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/messages", require("./routes/messages"));
+
+// Catch-all for undefined routes
+app.use((req, res) => {
+    console.warn(`[404 Error] No route for: ${req.method} ${req.url}`);
+    res.status(404).json({ msg: `Route ${req.method} ${req.url} not found on this server` });
+});
 
 const onlineUsers = new Map(); // userId -> socketId
 

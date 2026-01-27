@@ -8,7 +8,7 @@ import EmojiPicker from 'emoji-picker-react';
 import Profile from "./Profile";
 import "../styles/Chat.css";
 
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 const socket = io(apiUrl);
 
 const Chat = () => {
