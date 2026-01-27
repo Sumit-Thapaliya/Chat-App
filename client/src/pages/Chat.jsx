@@ -171,15 +171,17 @@ const Chat = () => {
             setSearchResults([]);
         } catch (err) {
             console.error("Full Send Request Error:", err);
+            let errorMsg = "Error sending request";
             if (err.response) {
                 console.error("Server Response Error:", err.response.data);
-                alert(err.response.data.msg || "Error sending request");
+                errorMsg = err.response.data.msg || `Server Error: ${err.response.status}`;
             } else if (err.request) {
                 console.error("No response received. Possible CORS or Network issue.");
-                alert("Network error: Could not reach server. Check CORS configuration.");
+                errorMsg = "Network error: Could not reach server. Check your connection or CORS configuration.";
             } else {
-                alert("Error: " + err.message);
+                errorMsg = "Error: " + err.message;
             }
+            alert(errorMsg);
         }
     };
 

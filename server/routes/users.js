@@ -17,27 +17,43 @@ router.get("/search", auth, async (req, res) => {
 // Send Friend Request
 router.post("/send-request", auth, async (req, res) => {
     const { friendId } = req.body;
+    console.log(`[DEBUG] Send request from ${req.user.id} to ${friendId}`);
     try {
-        if (req.user.id === friendId) return res.status(400).json({ msg: "Cannot request yourself" });
+        if (req.user.id === friendId) {
+            console.log("[DEBUG] User tried to request themselves");
+            return res.status(400).json({ msg: "Cannot request yourself" });
+        }
 
         const friend = await User.findById(friendId);
-        if (!friend) return res.status(404).json({ msg: "User not found" });
+        if (!friend) {
+            console.log(`[DEBUG] Target user ${friendId} not found`);
+            return res.status(404).json({ msg: "User not found" });
+        }
 
         // Check if already friends
         if (friend.friends && friend.friends.some(fId => fId.toString() === req.user.id)) {
+            console.log("[DEBUG] Already friends");
             return res.status(400).json({ msg: "Already friends" });
         }
 
         // Check if request already pending
-        const existing = friend.friendRequests && friend.friendRequests.find(r => r.from.toString() === req.user.id);
-        if (existing) return res.status(400).json({ msg: "Request already sent" });
+        const existing = friend.friendRequests && friend.friendRequests.find(r => r.from && r.from.toString() === req.user.id);
+        if (existing) {
+            console.log("[DEBUG] Request already pending");
+            return res.status(400).json({ msg: "Request already sent" });
+        }
 
+        console.log("[DEBUG] Pushing new friend request");
         friend.friendRequests.push({ from: req.user.id });
         await friend.save();
+        console.log("[DEBUG] Friend request saved to DB");
 
         const io = req.app.get("socketio");
         if (io) {
+            console.log(`[DEBUG] Emitting new_friend_request to ${friendId}`);
             io.to(friendId).emit("new_friend_request");
+        } else {
+            console.warn("[DEBUG] Socket.io instance not found in app");
         }
 
         res.json({ msg: "Request sent" });
