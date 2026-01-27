@@ -25,14 +25,27 @@ const Chat = () => {
     const [requests, setRequests] = useState([]);
     const [theme, setTheme] = useState('dark');
     const [showProfile, setShowProfile] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
     const typingTimeoutRef = useRef(null);
     const emojiPickerRef = useRef(null);
     const scrollRef = useRef();
 
     useEffect(() => {
         if (user) {
-            socket.emit("join_room", user.id);
+            const onConnect = () => {
+                socket.emit("join_room", user.id);
+            };
+
+            if (socket.connected) {
+                onConnect();
+            }
+
+            socket.on("connect", onConnect);
             getRequests();
+
+            return () => {
+                socket.off("connect", onConnect);
+            };
         }
     }, [user]);
 
@@ -139,6 +152,10 @@ const Chat = () => {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
                 setShowEmojiPicker(false);
             }
+            // Close notifications if clicking outside
+            if (!event.target.closest('.notification-container')) {
+                setShowNotifications(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -159,13 +176,30 @@ const Chat = () => {
 
     const acceptRequest = async (requestId) => {
         try {
-            await axios.post(`${apiUrl}/api/users/accept-request`, { requestId }, {
+            const res = await axios.post(`${apiUrl}/api/users/accept-request`, { requestId }, {
                 headers: { "x-auth-token": localStorage.getItem("token") },
             });
+
+            // Re-fetch friends to get the latest list
+            const friendsRes = await axios.get(`${apiUrl}/api/users/friends`, {
+                headers: { "x-auth-token": localStorage.getItem("token") },
+            });
+            const updatedFriends = friendsRes.data;
+            setFriends(updatedFriends);
             getRequests();
-            getFriends();
+
+            // Auto-switch to the new friend's chat
+            // The API returns the new friend list, find the one that was just added (who sent the request)
+            // We need to find the user who sent the request. We had it in 'requests' state.
+            const acceptedReq = requests.find(r => r._id === requestId);
+            if (acceptedReq) {
+                const newFriend = updatedFriends.find(f => f._id === acceptedReq.from._id);
+                if (newFriend) setCurrentChat(newFriend);
+            }
+
+            setShowNotifications(false);
         } catch (err) {
-            alert("Error accepting request");
+            alert(err.response?.data?.msg || "Error accepting request");
         }
     };
 
@@ -244,6 +278,56 @@ const Chat = () => {
                 <div className="sidebar-header">
                     <h3>Messages</h3>
                     <div className="sidebar-actions">
+                        <div className="notification-container">
+                            <button
+                                className={`notification-btn ${requests.length > 0 ? 'has-notifications' : ''}`}
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                title="Notifications"
+                            >
+                                🔔
+                                {requests.length > 0 && <span className="notification-badge">{requests.length}</span>}
+                            </button>
+
+                            <AnimatePresence>
+                                {showNotifications && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="notifications-dropdown"
+                                    >
+                                        <div className="dropdown-header">
+                                            <span>Friend Requests</span>
+                                        </div>
+                                        <div className="dropdown-content">
+                                            {requests.length > 0 ? (
+                                                requests.map(r => (
+                                                    <div key={r._id} className="dropdown-item">
+                                                        <div className="item-user">
+                                                            <div className="item-avatar">
+                                                                {r.from.username[0].toUpperCase()}
+                                                            </div>
+                                                            <div className="item-info">
+                                                                <span className="item-name">{r.from.username}</span>
+                                                                <span className="item-text">sent you a request</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="item-actions">
+                                                            <button className="dropdown-acc-btn" onClick={() => acceptRequest(r._id)}>Accept</button>
+                                                            <button className="dropdown-rej-btn" onClick={() => rejectRequest(r._id)}>✕</button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="empty-notifications">
+                                                    No new requests ✨
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                         <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>

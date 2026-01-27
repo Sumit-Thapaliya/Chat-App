@@ -24,21 +24,26 @@ router.post("/send-request", auth, async (req, res) => {
         if (!friend) return res.status(404).json({ msg: "User not found" });
 
         // Check if already friends
-        if (friend.friends.includes(req.user.id)) return res.status(400).json({ msg: "Already friends" });
+        if (friend.friends && friend.friends.some(fId => fId.toString() === req.user.id)) {
+            return res.status(400).json({ msg: "Already friends" });
+        }
 
         // Check if request already pending
-        const existing = friend.friendRequests.find(r => r.from.toString() === req.user.id);
+        const existing = friend.friendRequests && friend.friendRequests.find(r => r.from.toString() === req.user.id);
         if (existing) return res.status(400).json({ msg: "Request already sent" });
 
         friend.friendRequests.push({ from: req.user.id });
         await friend.save();
 
         const io = req.app.get("socketio");
-        io.to(friendId).emit("new_friend_request");
+        if (io) {
+            io.to(friendId).emit("new_friend_request");
+        }
 
         res.json({ msg: "Request sent" });
     } catch (err) {
-        res.status(500).send("Server Error");
+        console.error("Send Friend Request Error:", err);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 
@@ -72,7 +77,8 @@ router.post("/accept-request", auth, async (req, res) => {
 
         res.json({ msg: "Request accepted", friends: user.friends });
     } catch (err) {
-        res.status(500).send("Server Error");
+        console.error("Accept Friend Request Error:", err);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 
@@ -85,7 +91,8 @@ router.post("/reject-request", auth, async (req, res) => {
         await user.save();
         res.json({ msg: "Request rejected" });
     } catch (err) {
-        res.status(500).send("Server Error");
+        console.error("Reject Friend Request Error:", err);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 
@@ -95,7 +102,8 @@ router.get("/requests", auth, async (req, res) => {
         const user = await User.findById(req.user.id).populate("friendRequests.from", "username avatar");
         res.json(user.friendRequests);
     } catch (err) {
-        res.status(500).send("Server Error");
+        console.error("Get Pending Requests Error:", err);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 
@@ -105,7 +113,8 @@ router.get("/friends", auth, async (req, res) => {
         const user = await User.findById(req.user.id).populate("friends", "username avatar online");
         res.json(user.friends);
     } catch (err) {
-        res.status(500).send("Server Error");
+        console.error("Get Friends Error:", err);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 

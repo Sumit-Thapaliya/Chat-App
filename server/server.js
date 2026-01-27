@@ -14,12 +14,6 @@ const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(cors({ origin: clientUrl }));
 app.use(express.json());
 
-// Routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/users", require("./routes/users"));
-app.use("/api/messages", require("./routes/messages"));
-
-// Socket.IO
 const io = new Server(server, {
     cors: {
         origin: clientUrl,
@@ -28,6 +22,11 @@ const io = new Server(server, {
 });
 
 app.set("socketio", io);
+
+// Routes
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/messages", require("./routes/messages"));
 
 const onlineUsers = new Map(); // userId -> socketId
 
