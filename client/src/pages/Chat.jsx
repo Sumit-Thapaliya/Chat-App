@@ -170,7 +170,16 @@ const Chat = () => {
             setSearchQuery("");
             setSearchResults([]);
         } catch (err) {
-            alert(err.response?.data?.msg || "Error sending request");
+            console.error("Full Send Request Error:", err);
+            if (err.response) {
+                console.error("Server Response Error:", err.response.data);
+                alert(err.response.data.msg || "Error sending request");
+            } else if (err.request) {
+                console.error("No response received. Possible CORS or Network issue.");
+                alert("Network error: Could not reach server. Check CORS configuration.");
+            } else {
+                alert("Error: " + err.message);
+            }
         }
     };
 
@@ -199,7 +208,13 @@ const Chat = () => {
 
             setShowNotifications(false);
         } catch (err) {
-            alert(err.response?.data?.msg || "Error accepting request");
+            console.error("Full Accept Request Error:", err);
+            if (err.response) {
+                console.error("Server Response Error:", err.response.data);
+                alert(err.response.data.msg || "Error accepting request");
+            } else {
+                alert("Error accepting request");
+            }
         }
     };
 

@@ -11,13 +11,29 @@ const server = http.createServer(app);
 
 // Middleware
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-app.use(cors({ origin: clientUrl }));
+// Robust CORS: Allow both the exact URL and the version without a trailing slash
+const allowedOrigins = [clientUrl, clientUrl.replace(/\/$/, "")];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.error(`[CORS Error] Origin: ${origin} not allowed. Allowed: ${clientUrl}`);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json());
+
+console.log(`[CONFIG] Allowed Client URL: ${clientUrl}`);
 
 const io = new Server(server, {
     cors: {
-        origin: clientUrl,
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
+        credentials: true
     },
 });
 
