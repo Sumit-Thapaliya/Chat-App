@@ -3,6 +3,11 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const User = require("../models/User");
 
+// Debug route to verify router mounting
+router.get("/debug", (req, res) => {
+    res.json({ msg: "Users router is mounted correctly", path: "/api/users/debug" });
+});
+
 // Search Users
 router.get("/search", auth, async (req, res) => {
     const { username } = req.query;

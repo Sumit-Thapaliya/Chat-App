@@ -45,6 +45,11 @@ const io = new Server(server, {
 
 app.set("socketio", io);
 
+// Root Route
+app.get("/", (req, res) => {
+    res.send("Chat App Server is running. Use /api/test for status.");
+});
+
 // Health Check Route
 app.get("/api/test", (req, res) => {
     res.json({
