@@ -45,6 +45,16 @@ const io = new Server(server, {
 
 app.set("socketio", io);
 
+// Health Check Route
+app.get("/api/test", (req, res) => {
+    res.json({
+        msg: "Backend is UP",
+        timestamp: new Date().toISOString(),
+        version: "1.0.1-debug",
+        clientUrl: clientUrl
+    });
+});
+
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));

@@ -162,10 +162,13 @@ const Chat = () => {
     }, []);
 
     const sendRequest = async (friendId) => {
+        const requestUrl = `${apiUrl}/api/users/send-request`;
+        console.log(`[DEBUG] Attempting POST to: ${requestUrl} with friendId: ${friendId}`);
         try {
-            await axios.post(`${apiUrl}/api/users/send-request`, { friendId }, {
+            const res = await axios.post(requestUrl, { friendId }, {
                 headers: { "x-auth-token": localStorage.getItem("token") },
             });
+            console.log("[DEBUG] Send Request Success:", res.data);
             alert("Friend request sent!");
             setSearchQuery("");
             setSearchResults([]);
@@ -173,11 +176,15 @@ const Chat = () => {
             console.error("Full Send Request Error:", err);
             let errorMsg = "Error sending request";
             if (err.response) {
-                console.error("Server Response Error:", err.response.data);
-                errorMsg = err.response.data.msg || `Server Error: ${err.response.status}`;
+                console.error("Server Response Error Data:", err.response.data);
+                console.error("Server Response Status:", err.response.status);
+                console.error("Server Response Headers:", err.response.headers);
+
+                const serverMsg = err.response.data.msg || (typeof err.response.data === 'string' ? err.response.data : '');
+                errorMsg = `Server Error ${err.response.status}: ${serverMsg || 'URL: ' + requestUrl}`;
             } else if (err.request) {
-                console.error("No response received. Possible CORS or Network issue.");
-                errorMsg = "Network error: Could not reach server. Check your connection or CORS configuration.";
+                console.error("No response received. URL hit was:", requestUrl);
+                errorMsg = `Network error: Could not reach server at ${requestUrl}. Check CORS/Network.`;
             } else {
                 errorMsg = "Error: " + err.message;
             }
