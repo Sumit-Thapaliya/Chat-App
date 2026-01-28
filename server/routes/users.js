@@ -35,14 +35,18 @@ router.post("/send-request", auth, async (req, res) => {
             return res.status(404).json({ msg: "User not found" });
         }
 
+        // Initialize arrays if undefined (for users created before schema update)
+        if (!friend.friends) friend.friends = [];
+        if (!friend.friendRequests) friend.friendRequests = [];
+
         // Check if already friends
-        if (friend.friends && friend.friends.some(fId => fId.toString() === req.user.id)) {
+        if (friend.friends.some(fId => fId.toString() === req.user.id)) {
             console.log("[DEBUG] Already friends");
             return res.status(400).json({ msg: "Already friends" });
         }
 
         // Check if request already pending
-        const existing = friend.friendRequests && friend.friendRequests.find(r => r.from && r.from.toString() === req.user.id);
+        const existing = friend.friendRequests.find(r => r.from && r.from.toString() === req.user.id);
         if (existing) {
             console.log("[DEBUG] Request already pending");
             return res.status(400).json({ msg: "Request already sent" });
