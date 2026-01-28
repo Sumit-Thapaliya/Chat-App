@@ -325,7 +325,7 @@ const Chat = () => {
                                         </div>
                                         <div className="dropdown-content">
                                             {requests.length > 0 ? (
-                                                requests.map(r => (
+                                                requests.filter(r => r.from && r.from.username).map(r => (
                                                     <div key={r._id} className="dropdown-item">
                                                         <div className="item-user">
                                                             <div className="item-avatar">
@@ -401,7 +401,7 @@ const Chat = () => {
                     {requests.length > 0 && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pending-section">
                             <h4>Requests ({requests.length})</h4>
-                            {requests.map(r => (
+                            {requests.filter(r => r.from && r.from.username).map(r => (
                                 <div key={r._id} className="request-item">
                                     <span>{r.from.username}</span>
                                     <div className="request-btns">
