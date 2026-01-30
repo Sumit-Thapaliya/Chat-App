@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { NotificationContext } from "../context/NotificationContext";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,21 +8,25 @@ import "../styles/Profile.css";
 
 const Profile = () => {
     const { user, logout } = useContext(AuthContext);
+    const { showToast, showConfirm } = useContext(NotificationContext);
     const navigate = useNavigate();
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     const handleDelete = async () => {
-        if (confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-            try {
-                await axios.delete(`${apiUrl}/api/users/delete`, {
-                    headers: { "x-auth-token": localStorage.getItem("token") },
-                });
-                logout();
-                navigate("/login");
-            } catch (err) {
-                alert("Error deleting account");
+        showConfirm(
+            "Are you sure you want to delete your account? This cannot be undone.",
+            async () => {
+                try {
+                    await axios.delete(`${apiUrl}/api/users/delete`, {
+                        headers: { "x-auth-token": localStorage.getItem("token") },
+                    });
+                    logout();
+                    navigate("/login");
+                } catch (err) {
+                    showToast("Error deleting account", "error");
+                }
             }
-        }
+        );
     };
 
     return (
@@ -34,7 +39,7 @@ const Profile = () => {
             >
                 <div className="profile-header">
                     <div className="profile-avatar">
-                        {user?.username?.[0].toUpperCase()}
+                        {user?.username?.[0]?.toUpperCase()}
                     </div>
                     <h1>{user?.username}</h1>
                     <p className="user-id">ID: {user?.id}</p>

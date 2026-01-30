@@ -1,44 +1,33 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
-import { useContext } from "react";
+import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Chat from "./pages/Chat";
-import Profile from "./pages/Profile";
+import Toast from "./components/Toast";
+import ConfirmDialog from "./components/ConfirmDialog";
+import ProtectedRoute from "./components/ProtectedRoute";
+import "./index.css";
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
-  if (loading) return <div>Loading...</div>;
-  return user ? children : <Navigate to="/login" />;
-};
-
-function App() {
+const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
+      <NotificationProvider>
+        <Toast />
+        <ConfirmDialog />
+        <Router>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Chat />} />
+            </Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
-}
+};
 
 export default App;

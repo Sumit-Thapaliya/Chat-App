@@ -9,17 +9,25 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkUser = async () => {
-            const token = localStorage.getItem("token");
-            if (token) {
-                // Here we could verify token with backend, for now decode or assume valid
-                // Ideally call /api/auth/me or similar. 
-                // For simplicity, we just use the stored user info if available or decode
-                // For now, let's just rely on if token exists. 
-                // A robust app would verify token validity.
-                const storedUser = localStorage.getItem("user");
-                if (storedUser) setUser(JSON.parse(storedUser));
+            try {
+                const token = localStorage.getItem("token");
+                if (token) {
+                    const storedUser = localStorage.getItem("user");
+                    if (storedUser) {
+                        try {
+                            setUser(JSON.parse(storedUser));
+                        } catch (e) {
+                            console.error("Failed to parse stored user", e);
+                            localStorage.removeItem("user");
+                            localStorage.removeItem("token");
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Auth check failed:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         checkUser();
     }, []);
@@ -50,7 +58,14 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, register, logout, loading }}>
-            {children}
+            {loading ? (
+                <div className="loading-screen">
+                    <div className="loading-spinner"></div>
+                    Loading...
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 };

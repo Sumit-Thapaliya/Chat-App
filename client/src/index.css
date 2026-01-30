@@ -1,37 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Light Theme - New Default */
-  --primary: #4f46e5;
-  --primary-dark: #3730a3;
-  --primary-glow: rgba(79, 70, 229, 0.15);
+  /* Premium "Midnight Azure" Theme */
+  --primary: #3b82f6;
+  /* Electric Blue */
+  --primary-dark: #1d4ed8;
+  /* Deep Blue */
+  --primary-glow: rgba(59, 130, 246, 0.4);
+
   --secondary: #64748b;
-  --accent: #10b981;
+  --accent: #06b6d4;
+  /* Cyan Accent */
   --error: #ef4444;
+  --success: #10b981;
 
-  --bg-main: #f8fafc;
+  /* Light Theme */
+  --bg-main: #f0f4f8;
+  /* Very light blue-grey */
   --bg-card: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #475569;
+  --text-main: #1e293b;
+  /* Slate 800 */
+  --text-muted: #64748b;
+  /* Slate 500 */
 
-  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: #e2e8f0;
-  --glass-blur: blur(12px);
+  /* Slate 200 */
+  --glass-blur: blur(20px);
 
-  --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
-  --shadow-deep: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-  --radius-xl: 32px;
-  --radius-lg: 20px;
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-deep: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  --radius-xl: 24px;
+  --radius-lg: 16px;
   --radius-md: 12px;
-  --sidebar-w: 360px;
+  --sidebar-w: 380px;
 
-  /* Dark Theme Variable Mappings */
-  --bg-main-dark: #0f172a;
-  --bg-card-dark: #1e293b;
-  --text-main-dark: #f1f5f9;
+  /* Dark Theme */
+  --bg-main-dark: #020617;
+  /* Almost Black/Slate */
+  --bg-card-dark: #0f172a;
+  /* Slate 900 */
+  --text-main-dark: #f8fafc;
+  /* Slate 50 */
   --text-muted-dark: #94a3b8;
-  --glass-bg-dark: rgba(30, 41, 59, 0.7);
-  --glass-border-dark: rgba(255, 255, 255, 0.1);
+  /* Slate 400 */
+  --glass-bg-dark: rgba(15, 23, 42, 0.85);
+  --glass-border-dark: #1e293b;
+  /* Slate 800 */
 }
 
 [data-theme='dark'] {
@@ -41,7 +56,7 @@
   --text-muted: var(--text-muted-dark);
   --glass-bg: var(--glass-bg-dark);
   --glass-border: var(--glass-border-dark);
-  --primary-glow: rgba(99, 102, 241, 0.3);
+  --primary-glow: rgba(59, 130, 246, 0.25);
 }
 
 * {
@@ -52,17 +67,14 @@
 }
 
 body {
-  background: var(--bg-main);
-  background-image:
-    radial-gradient(var(--glass-border) 1.5px, transparent 0);
-  background-size: 32px 32px;
-  min-height: 100vh;
+  background-color: var(--bg-main);
   color: var(--text-main);
-  transition: background 0.4s ease, color 0.4s ease;
-  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow: hidden;
+  height: 100vh;
 }
 
-/* Enhanced Mesh Background (Soft & Light) */
+/* Refined Background */
 .mesh-bg {
   position: fixed;
   top: 0;
@@ -72,19 +84,16 @@ body {
   z-index: -1;
   background-color: var(--bg-main);
   background-image:
-    radial-gradient(at 0% 0%, hsla(240, 100%, 98%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(220, 100%, 95%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(260, 100%, 98%, 1) 0, transparent 50%);
-  opacity: 0.8;
-  transition: opacity 0.5s ease, background-image 0.5s ease;
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0, transparent 50%);
+  opacity: 1;
+  transition: all 0.5s ease;
 }
 
 [data-theme='dark'] .mesh-bg {
   background-image:
-    radial-gradient(at 0% 0%, hsla(253, 16%, 12%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(225, 39%, 20%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(339, 49%, 20%, 1) 0, transparent 50%);
-  opacity: 0.5;
+    radial-gradient(at 0% 0%, rgba(29, 78, 216, 0.2) 0, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0, transparent 50%);
 }
 
 #root {

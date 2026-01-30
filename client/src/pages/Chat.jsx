@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { NotificationContext } from "../context/NotificationContext";
 import io from "socket.io-client";
 import axios from "axios";
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ const socket = io(apiUrl);
 
 const Chat = () => {
     const { user } = useContext(AuthContext);
+    const { showToast } = useContext(NotificationContext);
     const [friends, setFriends] = useState([]);
     const [currentChat, setCurrentChat] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -26,9 +28,14 @@ const Chat = () => {
     const [theme, setTheme] = useState('dark');
     const [showProfile, setShowProfile] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showScrollBtn, setShowScrollBtn] = useState(false);
     const typingTimeoutRef = useRef(null);
     const emojiPickerRef = useRef(null);
     const scrollRef = useRef();
+    const inputRef = useRef();
+    const messagesEndRef = useRef();
+
+    const [unreadMessages, setUnreadMessages] = useState({}); // friendId -> count
 
     useEffect(() => {
         if (user) {
@@ -63,7 +70,9 @@ const Chat = () => {
         });
 
         socket.on("receive_message", (data) => {
-            if (currentChat && (data.senderId === currentChat._id || data.receiverId === currentChat._id)) {
+            const isCurrentChat = currentChat && (data.senderId === currentChat._id || data.receiverId === currentChat._id);
+
+            if (isCurrentChat) {
                 setMessages((prev) => {
                     if (data.senderId !== user.id) {
                         return [...prev, {
@@ -74,6 +83,15 @@ const Chat = () => {
                     }
                     return prev;
                 });
+            } else {
+                // If not current chat, increment unread count
+                if (data.senderId !== user.id) {
+                    setUnreadMessages(prev => ({
+                        ...prev,
+                        [data.senderId]: (prev[data.senderId] || 0) + 1
+                    }));
+                    showToast(`New message from ${friends.find(f => f._id === data.senderId)?.username || 'someone'}`, 'info');
+                }
             }
         });
 
@@ -93,7 +111,17 @@ const Chat = () => {
             socket.off("new_friend_request");
             socket.off("request_accepted");
         };
-    }, [currentChat, user.id]);
+    }, [currentChat, user.id, friends]);
+
+    const handleChatSelect = (friend) => {
+        setCurrentChat(friend);
+        // Clear unread messages for this friend
+        setUnreadMessages(prev => {
+            const newUnread = { ...prev };
+            delete newUnread[friend._id];
+            return newUnread;
+        });
+    };
 
     const getRequests = async () => {
         try {
@@ -169,7 +197,7 @@ const Chat = () => {
                 headers: { "x-auth-token": localStorage.getItem("token") },
             });
             console.log("[DEBUG] Send Request Success:", res.data);
-            alert("Friend request sent!");
+            showToast("Friend request sent!", "success");
             setSearchQuery("");
             setSearchResults([]);
         } catch (err) {
@@ -188,7 +216,7 @@ const Chat = () => {
             } else {
                 errorMsg = "Error: " + err.message;
             }
-            alert(errorMsg);
+            showToast(errorMsg, "error");
         }
     };
 
@@ -220,9 +248,9 @@ const Chat = () => {
             console.error("Full Accept Request Error:", err);
             if (err.response) {
                 console.error("Server Response Error:", err.response.data);
-                alert(err.response.data.msg || "Error accepting request");
+                showToast(err.response.data.msg || "Error accepting request", "error");
             } else {
-                alert("Error accepting request");
+                showToast("Error accepting request", "error");
             }
         }
     };
@@ -234,7 +262,7 @@ const Chat = () => {
             });
             getRequests();
         } catch (err) {
-            alert("Error rejecting request");
+            showToast("Error rejecting request", "error");
         }
     };
 
@@ -246,6 +274,8 @@ const Chat = () => {
                         headers: { "x-auth-token": localStorage.getItem("token") },
                     });
                     setMessages(res.data);
+                    // Focus input on chat switch
+                    setTimeout(() => inputRef.current?.focus(), 100);
                 } catch (err) {
                     console.error(err);
                 }
@@ -254,9 +284,21 @@ const Chat = () => {
         getMessages();
     }, [currentChat]);
 
+    // Auto-scroll to bottom on new message
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, typingUsers]);
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        // Show button if we are more than 300px away from bottom
+        const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+        setShowScrollBtn(distanceToBottom > 300);
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     const handleSearch = async () => {
         if (!searchQuery) return;
@@ -292,7 +334,7 @@ const Chat = () => {
     };
 
     return (
-        <div className="chat-container">
+        <div className={`chat-container ${currentChat ? 'chat-active' : ''}`}>
             <div className="mesh-bg"></div>
             <motion.div
                 initial={{ x: -50, opacity: 0 }}
@@ -356,7 +398,7 @@ const Chat = () => {
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
                         <button className="profile-toggle" onClick={() => setShowProfile(!showProfile)}>
-                            {user?.username?.[0].toUpperCase()}
+                            {user?.username?.[0]?.toUpperCase()}
                         </button>
                     </div>
                 </div>
@@ -421,16 +463,24 @@ const Chat = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className={`friend-item ${currentChat?._id === f._id ? 'active' : ''}`}
-                                onClick={() => setCurrentChat(f)}
+                                className={`friend-item ${currentChat?._id === f._id ? 'active' : ''} ${unreadMessages[f._id] ? 'has-unread' : ''}`}
+                                onClick={() => handleChatSelect(f)}
                             >
                                 <div className="avatar-placeholder">
                                     {f.username[0].toUpperCase()}
                                     {onlineUsers.includes(f._id) && <span className="online-dot" />}
+                                    {unreadMessages[f._id] > 0 && (
+                                        <div className="unread-badge">{unreadMessages[f._id]}</div>
+                                    )}
                                 </div>
                                 <div className="friend-info">
                                     <span className="name">{f.username}</span>
-                                    <span className="status-text">{onlineUsers.includes(f._id) ? 'Active Now' : 'Last seen recently'}</span>
+                                    <span className="status-text">
+                                        {unreadMessages[f._id]
+                                            ? <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{unreadMessages[f._id]} new messages</span>
+                                            : (onlineUsers.includes(f._id) ? 'Active Now' : 'Last seen recently')
+                                        }
+                                    </span>
                                 </div>
                             </motion.div>
                         ))}
@@ -443,6 +493,9 @@ const Chat = () => {
                 {currentChat ? (
                     <>
                         <div className="chat-header">
+                            <button className="mobile-back-btn" onClick={() => setCurrentChat(null)}>
+                                ←
+                            </button>
                             <div className="header-user-info">
                                 <div className="header-avatar">
                                     {currentChat.username[0].toUpperCase()}
@@ -464,7 +517,7 @@ const Chat = () => {
                                 <button className="header-tool-btn" title="More Info">ℹ️</button>
                             </div>
                         </div>
-                        <div className="messages">
+                        <div className="messages" onScroll={handleScroll}>
                             <AnimatePresence initial={false}>
                                 {messages.map((m, index) => {
                                     const messageDate = new Date(m.timestamp).toLocaleDateString();
@@ -501,8 +554,29 @@ const Chat = () => {
                                         </div>
                                     );
                                 })}
+
+                                {currentChat && typingUsers[currentChat._id] && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="typing-bubble-container"
+                                    >
+                                        <div className="typing-bubble">
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                        </div>
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
-                            <div ref={scrollRef} />
+                            <div ref={messagesEndRef} />
+
+                            <button
+                                className={`scroll-bottom-btn ${showScrollBtn ? 'visible' : ''}`}
+                                onClick={scrollToBottom}
+                            >
+                                ↓
+                            </button>
                         </div>
                         <form className="chat-input" onSubmit={sendMessage}>
                             <div className="emoji-container" ref={emojiPickerRef}>
@@ -514,6 +588,7 @@ const Chat = () => {
                                 )}
                             </div>
                             <input
+                                ref={inputRef}
                                 type="text"
                                 placeholder="Type a message..."
                                 value={newMessage}

@@ -1,7 +1,6 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import "../styles/Auth.css";
 
 const Login = () => {
@@ -9,8 +8,14 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useContext(AuthContext);
+    const { login, user } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            navigate("/");
+        }
+    }, [user, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,10 +35,7 @@ const Login = () => {
     return (
         <div className="auth-page">
             <div className="mesh-bg"></div>
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
+            <div
                 className="auth-container"
             >
                 <div className="auth-logo">
@@ -42,7 +44,7 @@ const Login = () => {
                 <h2>Welcome Back</h2>
                 <p className="auth-subtitle">Great to see you again!</p>
 
-                {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="auth-error">{error}</motion.div>}
+                {error && <div className="auth-error">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
@@ -78,7 +80,7 @@ const Login = () => {
                     <span>New here?</span>
                     <Link to="/register">Create an account</Link>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };

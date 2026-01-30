@@ -1,3 +1,4 @@
+/* Modern Auth */
 .auth-page {
     position: relative;
     display: flex;
@@ -10,8 +11,6 @@
 }
 
 .auth-container {
-    position: relative;
-    z-index: 10;
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
     padding: 4rem 3rem;
@@ -20,6 +19,8 @@
     width: 100%;
     max-width: 440px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -35,6 +36,8 @@
     color: white;
     font-size: 2rem;
     box-shadow: 0 12px 24px -6px var(--primary-glow);
+    animation: none;
+    border: none;
 }
 
 .auth-container h2 {
@@ -43,6 +46,9 @@
     margin-bottom: 0.5rem;
     color: var(--text-main);
     letter-spacing: -1px;
+    font-family: inherit;
+    text-shadow: none;
+    text-transform: none;
 }
 
 .auth-subtitle {
@@ -82,12 +88,15 @@
     background: var(--bg-main);
     color: var(--text-main);
     outline: none;
+    font-family: inherit;
 }
 
 .auth-container input:focus {
     border-color: var(--primary);
     background: var(--bg-card);
     box-shadow: 0 0 0 4px var(--primary-glow);
+    border-left: 1.5px solid var(--primary);
+    /* reset */
 }
 
 .auth-container button {
@@ -102,12 +111,15 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 1.5rem;
     box-shadow: 0 10px 20px -5px var(--primary-glow);
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .auth-container button:hover:not(:disabled) {
     background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 15px 25px -5px var(--primary-glow);
+    color: white;
 }
 
 .auth-footer {
